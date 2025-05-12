@@ -1,4 +1,4 @@
-package service
+package embedding
 
 import (
 	"bytes"
@@ -20,6 +20,17 @@ const (
 	OPMODE_IMAGE_EMBED OperationMode = "image-embed"
 	OPMODE_MAINOBJECT  OperationMode = "main-object-class"
 )
+
+type Embedder struct {
+	url, apiKey string
+}
+
+func NewEmbedder(url, apiKey string) *Embedder {
+	return &Embedder{
+		url:    url,
+		apiKey: apiKey,
+	}
+}
 
 type Payload struct {
 	Image      string   `json:"image"`
@@ -94,19 +105,19 @@ func CreateDetectionPayload(imageFilename string, labelsCSV string, mode Operati
 	return nil, fmt.Errorf("Invalid mode %s", mode)
 }
 
-func RunDetector(payload *RequestPayload, url, apiKey string) (map[string]interface{}, error) {
+func (e *Embedder) Do(payload *RequestPayload) (map[string]interface{}, error) {
 
 	buf := &bytes.Buffer{}
 	enc := json.NewEncoder(buf)
 	err := enc.Encode(payload)
 
 	// Create the request
-	req, err := http.NewRequest("POST", url, buf)
+	req, err := http.NewRequest("POST", e.url, buf)
 	handlers.PanicOnError(err)
 
 	// Set headers
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Authorization", "Bearer "+e.apiKey)
 	req.Header.Set("Content-Type", "application/json")
 	// Make the request
 	client := &http.Client{}

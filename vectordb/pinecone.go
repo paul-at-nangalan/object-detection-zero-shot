@@ -5,22 +5,40 @@ import (
 	"fmt"
 	"github.com/pinecone-io/go-pinecone/v3/pinecone"
 	"google.golang.org/protobuf/types/known/structpb"
+	"log"
 )
 
-// UpsertVector uploads a single vector to Pinecone DB
-func UpsertVector(
-	vectorValues []float32,
-	vectorID string,
-	host string,
+type PineconeDB struct {
+	host      string
+	apiKey    string
+	namespace string
+}
+
+func NewPineconeDB(host string,
 	apiKey string,
 	namespace string,
+) *PineconeDB {
+	if namespace == "" {
+		log.Panicln("Namespace cannot be empty")
+	}
+	return &PineconeDB{
+		host:      host,
+		apiKey:    apiKey,
+		namespace: namespace,
+	}
+}
+
+// UpsertVector uploads a single vector to Pinecone DB
+func (p *PineconeDB) UpsertVector(
+	vectorValues []float32,
+	vectorID string,
 	metadata map[string]interface{},
 ) error {
 	// Create context
 	ctx := context.Background()
 	// Initialize Pinecone client
 	pc, err := pinecone.NewClient(pinecone.NewClientParams{
-		ApiKey: apiKey,
+		ApiKey: p.apiKey,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create Pinecone client: %v", err)
@@ -28,8 +46,8 @@ func UpsertVector(
 
 	// Create index connection
 	idxConnection, err := pc.Index(pinecone.NewIndexConnParams{
-		Host:      host,
-		Namespace: namespace,
+		Host:      p.host,
+		Namespace: p.namespace,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create index connection: %v", err)
@@ -66,26 +84,23 @@ type SearchResult struct {
 }
 
 // SearchVectors performs a similarity search in Pinecone DB
-func SearchVectors(
+func (p *PineconeDB) SearchVectors(
 	queryVector []float32,
-	host string,
-	apiKey string,
-	namespace string,
 	topK uint32,
 ) ([]SearchResult, error) {
 	// Create context
 	ctx := context.Background()
 	// Initialize Pinecone client
 	pc, err := pinecone.NewClient(pinecone.NewClientParams{
-		ApiKey: apiKey,
+		ApiKey: p.apiKey,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Pinecone client: %v", err)
 	}
 	// Create index connection
 	idxConnection, err := pc.Index(pinecone.NewIndexConnParams{
-		Host:      host,
-		Namespace: namespace,
+		Host:      p.host,
+		Namespace: p.namespace,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create index connection: %v", err)
