@@ -13,9 +13,19 @@ import (
 	"strings"
 )
 
+type OperationMode string
+
+const (
+	OPMODE_TEXT_EMBED  OperationMode = "text-embed"
+	OPMODE_IMAGE_EMBED OperationMode = "image-embed"
+	OPMODE_MAINOBJECT  OperationMode = "main-object-class"
+)
+
 type Payload struct {
 	Image      string   `json:"image"`
 	Candidates []string `json:"candidates"`
+	Type       string   `json:"type"`
+	Mode       string   `json:"mode"`
 }
 
 // RequestPayload represents the JSON structure for the API request
@@ -23,34 +33,68 @@ type RequestPayload struct {
 	Inputs Payload `json:"inputs"`
 }
 
-func CreateDetectionPayload(imageFilename string, labelsCSV string) (*RequestPayload, error) {
-	// Read the image file
-	imageData, err := os.ReadFile(imageFilename)
-	if err != nil {
-		return nil, fmt.Errorf("error reading image file: %w", err)
-	}
-	// Convert image data to base64
-	base64Data := base64.StdEncoding.EncodeToString(imageData)
-	// Split labels string into array
-	var labels []string
-	if labelsCSV != "" {
-		labels = strings.Split(labelsCSV, ",")
-		// Trim whitespace from labels
-		for i := range labels {
-			labels[i] = strings.TrimSpace(labels[i])
+func CreateDetectionPayload(imageFilename string, labelsCSV string, mode OperationMode) (*RequestPayload, error) {
+
+	switch mode {
+	case OPMODE_IMAGE_EMBED:
+		fmt.Println("Creating image request")
+		// Read the image file
+		imageData, err := os.ReadFile(imageFilename)
+		if err != nil {
+			return nil, fmt.Errorf("error reading image file: %w", err)
 		}
+		// Convert image data to base64
+		base64Data := base64.StdEncoding.EncodeToString(imageData)
+		// Create payload
+		payload := &RequestPayload{
+			Inputs: Payload{
+				Image: base64Data,
+				Type:  "get-embeddings",
+				Mode:  "image",
+			},
+		}
+		return payload, nil
+	case OPMODE_TEXT_EMBED:
+		fmt.Println("Creating text request")
+		// Split labels string into array
+		var labels []string
+		if labelsCSV != "" {
+			labels = strings.Split(labelsCSV, ",")
+			// Trim whitespace from labels
+			for i := range labels {
+				labels[i] = strings.TrimSpace(labels[i])
+			}
+		}
+		// Create payload
+		payload := &RequestPayload{
+			Inputs: Payload{
+				Candidates: labels,
+				Type:       "get-embeddings",
+				Mode:       "text",
+			},
+		}
+		return payload, nil
+	case OPMODE_MAINOBJECT:
+		// Read the image file
+		imageData, err := os.ReadFile(imageFilename)
+		if err != nil {
+			return nil, fmt.Errorf("error reading image file: %w", err)
+		}
+		// Convert image data to base64
+		base64Data := base64.StdEncoding.EncodeToString(imageData)
+		// Create payload
+		payload := &RequestPayload{
+			Inputs: Payload{
+				Image: base64Data,
+				Type:  "find-main-object",
+			},
+		}
+		return payload, nil
 	}
-	// Create payload
-	payload := &RequestPayload{
-		Inputs: Payload{
-			Image:      base64Data,
-			Candidates: labels,
-		},
-	}
-	return payload, nil
+	return nil, fmt.Errorf("Invalid mode %s", mode)
 }
 
-func RunDetector(payload *RequestPayload, url, apiKey string) error {
+func RunDetector(payload *RequestPayload, url, apiKey string) (map[string]interface{}, error) {
 
 	buf := &bytes.Buffer{}
 	enc := json.NewEncoder(buf)
@@ -68,7 +112,7 @@ func RunDetector(payload *RequestPayload, url, apiKey string) error {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
@@ -77,14 +121,14 @@ func RunDetector(payload *RequestPayload, url, apiKey string) error {
 			errreason, err := io.ReadAll(resp.Body)
 			if err != nil {
 				log.Println("Unable to read error response")
-				return fmt.Errorf("Request failed with code %d and reason nil", resp.StatusCode)
+				return nil, fmt.Errorf("Request failed with code %d and reason nil", resp.StatusCode)
 			}
-			return fmt.Errorf("Request failed with code %d and reason %s", resp.StatusCode, string(errreason))
+			return nil, fmt.Errorf("Request failed with code %d and reason %s", resp.StatusCode, string(errreason))
 		}
 	}
-	rawdata, err := io.ReadAll(resp.Body)
-	handlers.PanicOnError(err)
+	dec := json.NewDecoder(resp.Body)
+	m := make(map[string]interface{})
+	err = dec.Decode(&m)
 
-	fmt.Println("Response: ", string(rawdata))
-	return nil
+	return m, err
 }
