@@ -6,12 +6,14 @@ import (
 	"github.com/pinecone-io/go-pinecone/v3/pinecone"
 	"google.golang.org/protobuf/types/known/structpb"
 	"log"
+	"net/http"
 )
 
 type PineconeDB struct {
 	host      string
 	apiKey    string
 	namespace string
+	client    *http.Client
 }
 
 func NewPineconeDB(host string,
@@ -21,10 +23,15 @@ func NewPineconeDB(host string,
 	if namespace == "" {
 		log.Panicln("Namespace cannot be empty")
 	}
+	client := &http.Client{
+		Transport: NewRoundTripper(),
+	}
+
 	return &PineconeDB{
 		host:      host,
 		apiKey:    apiKey,
 		namespace: namespace,
+		client:    client,
 	}
 }
 
@@ -36,9 +43,11 @@ func (p *PineconeDB) UpsertVector(
 ) error {
 	// Create context
 	ctx := context.Background()
+
 	// Initialize Pinecone client
 	pc, err := pinecone.NewClient(pinecone.NewClientParams{
-		ApiKey: p.apiKey,
+		ApiKey:     p.apiKey,
+		RestClient: p.client, ///// Turn HTTP errors into actual errors so that the SDK doesn't ignore them
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create Pinecone client: %v", err)
@@ -81,6 +90,7 @@ func (p *PineconeDB) UpsertVector(
 type SearchResult struct {
 	Metadata map[string]interface{} `json:"metadata"`
 	Score    float32                `json:"score"`
+	ID       string                 `json:"id"`
 }
 
 // SearchVectors performs a similarity search in Pinecone DB
@@ -125,6 +135,7 @@ func (p *PineconeDB) SearchVectors(
 
 		results = append(results, SearchResult{
 			Score:    match.Score,
+			ID:       match.Vector.Id,
 			Metadata: metadata,
 		})
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/paul-at-nangalan/errorhandler/handlers"
 	"github.com/paul-at-nangalan/json-config/cfg"
 	"object-detection-zero-shot/embedding"
@@ -41,6 +42,11 @@ func main() {
 	if emb {
 		svc.EmbedData(&embeddings)
 	} else {
-		svc.ImageDetection(imagepath)
+		results := svc.ImageDetection(imagepath)
+		for _, result := range results {
+			fmt.Println()
+			fmt.Println(result.Score, "[", result.ID, "] =>", result.Metadata)
+			fmt.Println()
+		}
 	}
 }

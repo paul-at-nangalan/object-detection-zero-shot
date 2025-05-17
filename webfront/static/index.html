@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <h1 class="mb-4">Object Detection Upload</h1>
+
+    <!-- Upload Form -->
+    <form action="/image/embed" method="POST" enctype="multipart/form-data" class="mb-4">
+        <div class="mb-3">
+            <label for="image" class="form-label">Select Image</label>
+            <input type="file" class="form-control" id="image" name="image" required>
+        </div>
+        <div class="mb-3">
+            <label for="text" class="form-label">Text Description</label>
+            <input type="text" class="form-control" id="text" name="text" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
+    <!-- Status Messages -->
+    <div class="alert alert-success d-none" role="alert" id="successMessage">
+        Upload successful!
+    </div>
+    <div class="alert alert-danger d-none" role="alert" id="errorMessage">
+        Error occurred during upload.
+    </div>
+    <!-- Results Display -->
+    <div class="card mt-4 d-none" id="resultsCard">
+        <div class="card-header">
+            Detection Results
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Score</th>
+                        <th>Metadata</th>
+                    </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

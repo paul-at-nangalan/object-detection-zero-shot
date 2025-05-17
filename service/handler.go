@@ -21,6 +21,16 @@ func NewHandler(clipmodel *embedding.Embedder, pineconedb *vectordb.PineconeDB) 
 	}
 }
 
+func (h *Handler) getVector(emb []any) []float32 {
+	vector := make([]float32, 0)
+	for _, vectors := range emb {
+		for _, val := range vectors.([]any) {
+			vector = append(vector, float32(val.(float64)))
+		}
+	}
+	return vector
+}
+
 func (h *Handler) getEmbedding(imagefile string, labels string, mode embedding.OperationMode) []float32 {
 	/// First get text embeddings
 	payload, err := embedding.CreateDetectionPayload(imagefile, labels, mode)
@@ -28,20 +38,15 @@ func (h *Handler) getEmbedding(imagefile string, labels string, mode embedding.O
 	data, err := h.clipmodel.Do(payload)
 	handlers.PanicOnError(err)
 
-	emb := data["embeddings"].([]interface{})
-
-	vector := make([]float32, len(emb))
-	for i, val := range emb {
-		vector[i] = float32(val.(float64))
-	}
-	return vector
+	emb := data["embeddings"].([]any)
+	return h.getVector(emb)
 }
 
 /**
 {
 	"Items": [
-		{"ImageFile": "", "Label": ""},
-		{"ImageFile": "", "Label": ""}
+		{"ImageFile": "", "Label": "", "ID": "..."},
+		{"ImageFile": "", "Label": "", "ID": "..."}
 	]
 }
 */
@@ -91,7 +96,7 @@ func (h *Handler) EmbedData(embeddings *EmbedCfg) {
 
 }
 
-func (h *Handler) ImageDetection(imagefile string) {
+func (h *Handler) ImageDetection(imagefile string) []vectordb.SearchResult {
 
 	payload, err := embedding.CreateDetectionPayload(imagefile, "", embedding.OPMODE_MAINOBJECT)
 	handlers.PanicOnError(err)
@@ -99,18 +104,11 @@ func (h *Handler) ImageDetection(imagefile string) {
 	data, err := h.clipmodel.Do(payload)
 	handlers.PanicOnError(err)
 
-	emb := data["embeddings"].([]interface{})
+	emb := data["embeddings"].([]any)
+	vector := h.getVector(emb)
 
-	vector := make([]float32, len(emb))
-	for i, val := range emb {
-		vector[i] = float32(val.(float64))
-	}
 	results, err := h.pineconedb.SearchVectors(vector, 20)
 	handlers.PanicOnError(err)
 
-	for _, result := range results {
-		fmt.Println()
-		fmt.Println(result.Score, "=>", result.Metadata)
-		fmt.Println()
-	}
+	return results
 }

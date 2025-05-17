@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 type OperationMode string
@@ -69,12 +70,13 @@ func CreateDetectionPayload(imageFilename string, labelsCSV string, mode Operati
 		fmt.Println("Creating text request")
 		// Split labels string into array
 		var labels []string
-		if labelsCSV != "" {
-			labels = strings.Split(labelsCSV, ",")
-			// Trim whitespace from labels
-			for i := range labels {
-				labels[i] = strings.TrimSpace(labels[i])
-			}
+		if labelsCSV == "" {
+			return nil, fmt.Errorf("Labels are empty for text embed")
+		}
+		labels = strings.Split(labelsCSV, ",")
+		// Trim whitespace from labels
+		for i := range labels {
+			labels[i] = strings.TrimSpace(labels[i])
 		}
 		// Create payload
 		payload := &RequestPayload{
@@ -105,41 +107,53 @@ func CreateDetectionPayload(imageFilename string, labelsCSV string, mode Operati
 	return nil, fmt.Errorf("Invalid mode %s", mode)
 }
 
-func (e *Embedder) Do(payload *RequestPayload) (map[string]interface{}, error) {
+func (e *Embedder) Do(payload *RequestPayload) (m map[string]interface{}, err error) {
 
-	buf := &bytes.Buffer{}
-	enc := json.NewEncoder(buf)
-	err := enc.Encode(payload)
+	err = fmt.Errorf("Service unavailable")
+	m = make(map[string]interface{})
+	for i := 0; i < 5; i++ {
+		buf := &bytes.Buffer{}
+		enc := json.NewEncoder(buf)
+		err = enc.Encode(payload)
 
-	// Create the request
-	req, err := http.NewRequest("POST", e.url, buf)
-	handlers.PanicOnError(err)
+		// Create the request
+		req, err := http.NewRequest("POST", e.url, buf)
+		handlers.PanicOnError(err)
 
-	// Set headers
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "Bearer "+e.apiKey)
-	req.Header.Set("Content-Type", "application/json")
-	// Make the request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode > 299 {
-		if resp.Body != nil {
-			errreason, err := io.ReadAll(resp.Body)
-			if err != nil {
-				log.Println("Unable to read error response")
-				return nil, fmt.Errorf("Request failed with code %d and reason nil", resp.StatusCode)
-			}
-			return nil, fmt.Errorf("Request failed with code %d and reason %s", resp.StatusCode, string(errreason))
+		// Set headers
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Authorization", "Bearer "+e.apiKey)
+		req.Header.Set("Content-Type", "application/json")
+		// Make the request
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, err
 		}
-	}
-	dec := json.NewDecoder(resp.Body)
-	m := make(map[string]interface{})
-	err = dec.Decode(&m)
+		/// retry
+		if resp.StatusCode == 503 {
+			fmt.Println("Status code 503 - service not ready - sleeping for 30 seconds with max 5 retries")
+			resp.Body.Close()
+			time.Sleep(30 * time.Second)
+			continue
+		}
 
-	return m, err
+		/// Handle the response and return
+		defer resp.Body.Close()
+		if resp.StatusCode > 299 {
+			if resp.Body != nil {
+				errreason, err := io.ReadAll(resp.Body)
+				if err != nil {
+					log.Println("Unable to read error response")
+					return nil, fmt.Errorf("Request failed with code %d and reason nil", resp.StatusCode)
+				}
+				return nil, fmt.Errorf("Request failed with code %d and reason %s", resp.StatusCode, string(errreason))
+			}
+			return nil, fmt.Errorf("Request failed with code %d and not body", resp.StatusCode)
+		}
+		dec := json.NewDecoder(resp.Body)
+		err = dec.Decode(&m)
+		return m, err
+	}
+	return nil, err
 }
