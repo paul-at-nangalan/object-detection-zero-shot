@@ -1,7 +1,7 @@
   version: '3.8'
   services:
     object-detection:
-      build: .
+      image: paulatnesystemsasia/general:object-detection-v1.0
       ports:
         - "443:443"
       environment:

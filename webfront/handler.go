@@ -29,7 +29,7 @@ func NewHandler(svc *service.Handler, uploadDir string) *Handler {
 	throttleDetect := middleware.NewThrottleMiddleware(30, 24)
 	http.HandleFunc("/image/detect", throttleDetect.Wrap(h.HandleImageDetection))
 
-	http.Handle("/", http.FileServer(http.Dir("webfront/static")))
+	http.Handle("/", http.FileServer(http.Dir("/webfront/static")))
 	return h
 }
 

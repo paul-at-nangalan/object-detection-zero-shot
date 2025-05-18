@@ -104,7 +104,7 @@ Pinecone serves as the vector database, storing and searching high-dimensional e
 - Upsert operations for vector management
 
 ## Further Reading
-For more information about zero-shot image classification using CLIP, visit:
+For more information about zero-shot image classification using CLIP:
 [Zero-Shot Image Classification with CLIP](https://www.pinecone.io/learn/series/image-search/zero-shot-image-classification-clip/)
 See handler.py for the huggingface custom handler.
 For details on creating a custom handler for the inference endpoint, visit:

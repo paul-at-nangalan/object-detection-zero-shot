@@ -33,7 +33,6 @@ func main() {
 	pcapikey := os.ExpandEnv("$PC_APIKEY")
 	pchost := os.ExpandEnv("$PC_HOST")
 	pcnamespace := os.ExpandEnv("$PC_NAMESPACE")
-	cfg.Setup(embeddingcfg)
 
 	if runservice {
 
@@ -67,6 +66,7 @@ func main() {
 		handlers.PanicOnError(err)
 		return
 	}
+	cfg.Setup(embeddingcfg)
 
 	/// If embedding from disk data
 	embeddings := service.EmbedCfg{}

@@ -1,11 +1,12 @@
-FROM debian:bullseye-slim
+FROM debian
 # Create directories for certificates and binary
 RUN mkdir -p /certs /bin
 # Copy SSL certificates
 COPY ./certs/nesasia.io.combined.crt /certs/
 COPY ./certs/nesasia.io_key.txt /certs/
 # Copy the compiled binary
-COPY ./object-detection-zero-shot /bin/
+COPY ./bin/object-detection-zero-shot /bin/
+COPY ./webfront/static/ /webfront/static/
 # Create upload directory for images
 RUN mkdir -p /uploads && chmod 755 /uploads
 # Set working directory
