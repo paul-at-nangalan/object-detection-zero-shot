@@ -1,7 +1,9 @@
 package webfront
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/paul-at-nangalan/errorhandler/handlers"
 	"io"
 	"net/http"
 	"object-detection-zero-shot/middleware"
@@ -24,11 +26,16 @@ func NewHandler(svc *service.Handler, uploadDir string) *Handler {
 
 	throttleEmbed := middleware.NewThrottleMiddleware(30, 24)
 	http.HandleFunc("/image/embed", throttleEmbed.Wrap(h.HandleImageUpload))
+	throttleDetect := middleware.NewThrottleMiddleware(30, 24)
+	http.HandleFunc("/image/detect", throttleDetect.Wrap(h.HandleImageDetection))
+
 	http.Handle("/", http.FileServer(http.Dir("webfront/static")))
 	return h
 }
 
 func (h *Handler) HandleImageUpload(w http.ResponseWriter, r *http.Request) {
+	defer handlers.NetHandlePanic(w)
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -87,11 +94,28 @@ func (h *Handler) HandleImageUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	// Create embeddings
 	h.svc.EmbedData(embedCfg)
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "Successfully uploaded and processed image with ID: %s", sanitizedID)
+	enc := json.NewEncoder(w)
+	resp := map[string]any{
+		"status": "success",
+		"id":     sanitizedID,
+	}
+	err = enc.Encode(resp)
+	if err != nil {
+		fmt.Printf("Failed to send response with error %s", err.Error())
+	}
+}
+
+type DectionResponse struct {
+	Found bool    `json:"found"`
+	Label string  `json:"label"`
+	Score float32 `json:"score"`
 }
 
 func (h *Handler) HandleImageDetection(w http.ResponseWriter, r *http.Request) {
+	defer handlers.NetHandlePanic(w)
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -135,11 +159,19 @@ func (h *Handler) HandleImageDetection(w http.ResponseWriter, r *http.Request) {
 	// Perform image detection
 	results := h.svc.ImageDetection(filepath)
 
-	if len(results) == 0 {
-
+	resp := DectionResponse{
+		Found: false,
+	}
+	if len(results) > 0 {
+		resp.Found = true
+		resp.Label = results[0].Metadata["value"].(string)
+		resp.Score = results[0].Score
 	}
 
 	// Return results as JSON
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(results)
+	err = json.NewEncoder(w).Encode(results)
+	if err != nil {
+		fmt.Println("Error writing response ", err)
+	}
 }

@@ -1,0 +1,18 @@
+  version: '3.8'
+  services:
+    object-detection:
+      build: .
+      ports:
+        - "443:443"
+      environment:
+        - HF_APITOKEN=${HF_APITOKEN}
+        - HF_OBJ_DETECTION_URL=${HF_OBJ_DETECTION_URL}
+        - PC_APIKEY=${PC_APIKEY}
+        - PC_HOST=${PC_HOST}
+        - PC_NAMESPACE=${PC_NAMESPACE}
+        - UPLOAD_DIR=/uploads
+        - CERTFILE=/certs/nesasia.io.combined.crt
+        - KEYFILE=/certs/nesasia.io_key.txt
+      volumes:
+        - ./uploads:/uploads
+      restart: unless-stopped

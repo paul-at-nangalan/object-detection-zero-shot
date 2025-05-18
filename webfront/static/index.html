@@ -1,55 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Object Detection</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Object Detection Zero-Shot API Documentation</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Syntax highlighting -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css" rel="stylesheet">
+  <style>
+    .endpoint {
+      margin-bottom: 2rem;
+      padding: 1rem;
+      border: 1px solid #dee2e6;
+      border-radius: 0.25rem;
+    }
+    pre {
+      background-color: #f8f9fa;
+      padding: 1rem;
+      border-radius: 0.25rem;
+    }
+  </style>
 </head>
 <body>
-<div class="container mt-5">
-    <h1 class="mb-4">Object Detection Upload</h1>
+<div class="container py-5">
+  <h1>Object Detection Zero-Shot</h1>
+  <p class="lead">A zero-shot image classification and detection service using OpenAI's ViT-CLIP model through Hugging Face's inference engine, with Pinecone vector database integration for efficient similarity search.</p>
+  <p class="text-muted"><strong>Note:</strong> This is for demonstration purposes only.</p>
+  <h2 class="mt-5">API Endpoints</h2>
+  <div class="endpoint">
+    <h3>1. Image Embedding (/image/embed)</h3>
+    <p>Creates vector embeddings for images and their associated text labels, storing them in Pinecone.</p>
 
-    <!-- Upload Form -->
-    <form action="/image/embed" method="POST" enctype="multipart/form-data" class="mb-4">
-        <div class="mb-3">
-            <label for="image" class="form-label">Select Image</label>
-            <input type="file" class="form-control" id="image" name="image" required>
-        </div>
-        <div class="mb-3">
-            <label for="text" class="form-label">Text Description</label>
-            <input type="text" class="form-control" id="text" name="text" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Upload</button>
-    </form>
-    <!-- Status Messages -->
-    <div class="alert alert-success d-none" role="alert" id="successMessage">
-        Upload successful!
+    <h4>Request Format:</h4>
+    <pre><code class="language-http">POST /image/embed
+Content-Type: multipart/form-data
+image: &lt;image_file&gt;
+text: &lt;text_description&gt;</code></pre>
+    <h4>Response:</h4>
+    <pre><code class="language-json">{
+    "status": "success",
+    "id": "&lt;generated_id&gt;"
+}</code></pre>
+    <h4>Features:</h4>
+    <ul>
+      <li>Generates both image and text embeddings using the CLIP model</li>
+      <li>Stores embeddings in Pinecone with unique IDs</li>
+      <li>Maintains separate vectors for image and text with prefixes "img-" and "text-"</li>
+      <li>Rate limited to 30 requests per 24 hours per IP</li>
+    </ul>
+  </div>
+  <div class="endpoint">
+    <h3>2. Image Detection (/image/detect)</h3>
+    <p>Performs zero-shot object detection on images by comparing them against stored embeddings.</p>
+
+    <h4>Request Format:</h4>
+    <pre><code class="language-http">POST /image/detect
+Content-Type: multipart/form-data
+image: &lt;image_file&gt;</code></pre>
+    <h4>Response:</h4>
+    <pre><code class="language-json">{
+    "score": &lt;similarity_score&gt;,
+    "id": "&lt;vector_id&gt;",
+    "label": "&lt;matched_label&gt;"
+}</code></pre>
+    <h4>Features:</h4>
+    <ul>
+      <li>Generates embeddings for the input image</li>
+      <li>Searches Pinecone for similar vectors</li>
+      <li>Returns the best match</li>
+      <li>Rate limited to 30 requests per 24 hours per IP</li>
+    </ul>
+  </div>
+  <h2 class="mt-5">Environment Variables</h2>
+  <ul class="list-group">
+    <li class="list-group-item"><code>HF_APITOKEN</code>: Hugging Face API token</li>
+    <li class="list-group-item"><code>HF_OBJ_DETECTION_URL</code>: Hugging Face model endpoint URL</li>
+    <li class="list-group-item"><code>PC_APIKEY</code>: Pinecone API key</li>
+    <li class="list-group-item"><code>PC_HOST</code>: Pinecone host</li>
+    <li class="list-group-item"><code>PC_NAMESPACE</code>: Pinecone namespace</li>
+  </ul>
+  <section class="section">
+    <div class="container">
+      <h2 class="title is-4">Curl Examples</h2>
+
+      <h3 class="subtitle">1. Image Embed Endpoint</h3>
+      <pre><code>curl -X POST http://nesasia.io/image/embed \
+-H "Content-Type: multipart/form-data" \
+-F "image=@/path/to/your/image.jpg" \
+-F "text=description of the image"</code></pre>
+      <p>Example Response:</p>
+      <pre><code>{
+    "status": "success",
+    "id": "generated-id"
+}</code></pre>
+      <h3 class="subtitle">2. Image Detection Endpoint</h3>
+      <pre><code>curl -X POST http://nesasia.io/image/detect \
+-H "Content-Type: multipart/form-data" \
+-F "image=@/path/to/your/image.jpg"</code></pre>
+      <p>Example Response:</p>
+      <pre><code>{
+    "found": true,
+    "score": 0.85,
+    "label": "matched label"
+}</code></pre>
     </div>
-    <div class="alert alert-danger d-none" role="alert" id="errorMessage">
-        Error occurred during upload.
+  </section>
+  <section class="section">
+    <div class="container">
+      <h2 class="title is-4">Further Reading</h2>
+      <p>For more information about zero-shot image classification using CLIP, visit:</p>
+      <p><a href="https://www.pinecone.io/learn/series/image-search/zero-shot">Zero-Shot Image Classification with CLIP</a></p>
     </div>
-    <!-- Results Display -->
-    <div class="card mt-4 d-none" id="resultsCard">
-        <div class="card-header">
-            Detection Results
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Score</th>
-                        <th>Metadata</th>
-                    </tr>
-                    </thead>
-                    <tbody id="resultsBody">
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+  </section>
 </div>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Syntax highlighting -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-http.min.js"></script>
 </body>
 </html>
