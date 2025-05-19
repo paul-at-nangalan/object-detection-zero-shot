@@ -61,7 +61,7 @@ The endpoint:
 ### Curl examples
 # 1. Image Embed Endpoint
 ```
-curl -X POST http://nesasia.io/image/embed \
+curl -X POST https://nesasia.io/image/embed \
 -H "Content-Type: multipart/form-data" \
 -F "image=@/path/to/your/image.jpg" \
 -F "text=description of the image"
@@ -74,7 +74,7 @@ curl -X POST http://nesasia.io/image/embed \
 
 # 2. Image Detection Endpoint
 ```
-curl -X POST http://nesasia.io/image/detect \
+curl -X POST https://nesasia.io/image/detect \
 -H "Content-Type: multipart/form-data" \
 -F "image=@/path/to/your/image.jpg"
 ```
@@ -106,7 +106,7 @@ Pinecone serves as the vector database, storing and searching high-dimensional e
 ## Further Reading
 For more information about zero-shot image classification using CLIP:
 [Zero-Shot Image Classification with CLIP](https://www.pinecone.io/learn/series/image-search/zero-shot-image-classification-clip/)
-See handler.py for the huggingface custom handler.
+See [handler.py](https://github.com/paul-at-nangalan/object-detection-zero-shot/blob/main/handler.py) for the huggingface custom handler.
 For details on creating a custom handler for the inference endpoint, visit:
 [HuggingFace create custom handler](https://huggingface.co/docs/inference-endpoints/en/guides/custom_handler).
 

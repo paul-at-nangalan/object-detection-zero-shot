@@ -170,7 +170,7 @@ func (h *Handler) HandleImageDetection(w http.ResponseWriter, r *http.Request) {
 
 	// Return results as JSON
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(results)
+	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		fmt.Println("Error writing response ", err)
 	}

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -31,6 +32,7 @@ func (t *ThrottleMiddleware) Wrap(next http.HandlerFunc) http.HandlerFunc {
 			ip = r.RemoteAddr // Fallback to remote address if CF header not present
 		}
 		if !t.allowRequest(ip) {
+			fmt.Println("Rate limit for ", ip)
 			http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
 			return
 		}

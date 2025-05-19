@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-6B0G64G1JM"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-6B0G64G1JM');
+    </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Object Detection Zero-Shot API Documentation</title>
@@ -21,12 +30,47 @@
       border-radius: 0.25rem;
     }
   </style>
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Object Detection Zero-Shot",
+            "applicationCategory": "BusinessApplication",
+            "description": "A demo of zero-shot image classification and detection service using OpenAI's ViT-CLIP model through Hugging Face's inference engine, with Pinecone vector database integration for efficient similarity search.",
+            "operatingSystem": "Any",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+            },
+            "softwareVersion": "1.0",
+            "applicationSuite": "Image Classification",
+            "featureList": [
+                "Zero-shot image classification",
+                "Pinecone Vector database integration",
+                "REST API endpoints",
+                "Rate limiting",
+                "Docker containerization"
+            ],
+            "requirements": "Docker environment for deployment",
+            "softwareHelp": {
+                "@type": "CreativeWork",
+                "url": "https://github.com/paul-at-nangalan/object-detection-zero-shot/blob/main/README.md"
+            },
+            "provider": {
+                "@type": "Organization",
+                "name": "NES Asia"
+            }
+        }
+    </script>
 </head>
 <body>
 <div class="container py-5">
   <h1>Object Detection Zero-Shot</h1>
-  <p class="lead">A zero-shot image classification and detection service using OpenAI's ViT-CLIP model through Hugging Face's inference engine, with Pinecone vector database integration for efficient similarity search.</p>
-  <p class="text-muted"><strong>Note:</strong> This is for demonstration purposes only.</p>
+  <p class="lead">A <strong>demo</strong> of zero-shot image classification and detection service using OpenAI's ViT-CLIP model through Hugging Face's inference engine, with Pinecone vector database integration for efficient similarity search.</p>
+    <p>The advantages of zero shot image classification are that the model doesn't need retraining to deal with new images.</p>
+  <p><strong>Note: This is for demonstration purposes only. The code can be found <a href="https://github.com/paul-at-nangalan/object-detection-zero-shot">here</a> </strong></p>
+    <p></p>
   <h2 class="mt-5">API Endpoints</h2>
   <div class="endpoint">
     <h3>1. Image Embedding (/image/embed)</h3>
@@ -72,20 +116,13 @@ image: &lt;image_file&gt;</code></pre>
       <li>Rate limited to 30 requests per 24 hours per IP</li>
     </ul>
   </div>
-  <h2 class="mt-5">Environment Variables</h2>
-  <ul class="list-group">
-    <li class="list-group-item"><code>HF_APITOKEN</code>: Hugging Face API token</li>
-    <li class="list-group-item"><code>HF_OBJ_DETECTION_URL</code>: Hugging Face model endpoint URL</li>
-    <li class="list-group-item"><code>PC_APIKEY</code>: Pinecone API key</li>
-    <li class="list-group-item"><code>PC_HOST</code>: Pinecone host</li>
-    <li class="list-group-item"><code>PC_NAMESPACE</code>: Pinecone namespace</li>
-  </ul>
+    <p></p>
   <section class="section">
     <div class="container">
       <h2 class="title is-4">Curl Examples</h2>
 
       <h3 class="subtitle">1. Image Embed Endpoint</h3>
-      <pre><code>curl -X POST http://nesasia.io/image/embed \
+      <pre><code>curl -X POST https://nesasia.io/image/embed \
 -H "Content-Type: multipart/form-data" \
 -F "image=@/path/to/your/image.jpg" \
 -F "text=description of the image"</code></pre>
@@ -95,7 +132,7 @@ image: &lt;image_file&gt;</code></pre>
     "id": "generated-id"
 }</code></pre>
       <h3 class="subtitle">2. Image Detection Endpoint</h3>
-      <pre><code>curl -X POST http://nesasia.io/image/detect \
+      <pre><code>curl -X POST https://nesasia.io/image/detect \
 -H "Content-Type: multipart/form-data" \
 -F "image=@/path/to/your/image.jpg"</code></pre>
       <p>Example Response:</p>
@@ -108,11 +145,23 @@ image: &lt;image_file&gt;</code></pre>
   </section>
   <section class="section">
     <div class="container">
+        <p></p>
       <h2 class="title is-4">Further Reading</h2>
-      <p>For more information about zero-shot image classification using CLIP, visit:</p>
-      <p><a href="https://www.pinecone.io/learn/series/image-search/zero-shot">Zero-Shot Image Classification with CLIP</a></p>
+      <p>For more information about zero-shot image classification using CLIP: <a href="https://www.pinecone.io/learn/series/image-search/zero-shot-image-classification-clip/" target="_blank">Zero-Shot Image Classification with CLIP</a></p>
+        <p>See <a href="https://github.com/paul-at-nangalan/object-detection-zero-shot/blob/main/handler.py" target="_blank">handler.py</a> for the huggingface custom handler.</p>
+        <p>For details on creating a custom handler for the inference endpoint:
+        <a href="https://huggingface.co/docs/inference-endpoints/en/guides/custom_handler" target="_blank">HuggingFace create custom handler</a>.</p>
+
     </div>
   </section>
+    <section class="section">
+        <div class="container">
+            <p></p>
+            <h2 class="title is-4">Questions</h2>
+            <p>Please direct any questions to info@nesasia.io</p>
+
+        </div>
+    </section>
 </div>
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

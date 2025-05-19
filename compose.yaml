@@ -15,4 +15,5 @@
         - KEYFILE=/certs/nesasia.io_key.txt
       volumes:
         - ./uploads:/uploads
+        - /etc/ssl/certs:/etc/ssl/certs:ro
       restart: unless-stopped
